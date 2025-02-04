@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recipe Remix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .recipe-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            padding: 20px;
+            text-align: left;
+        }
+        .recipe-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .recipe-content {
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Recipe Remix</h1>
+        <textarea id="ingredients" placeholder="Enter ingredients (e.g., rice, chicken, bell pepper)"></textarea>
+        <button onclick="generateRecipes()">Generate Recipes</button>
+        <div id="recipes"></div>
+    </div>
+
+    <script>
+        async function generateRecipes() {
+            const ingredients = document.getElementById("ingredients").value.trim();
+            const recipesDiv = document.getElementById("recipes");
+            recipesDiv.innerHTML = ""; // Clear previous results
+    
+            if (!ingredients) {
+                alert("Please enter some ingredients!");
+                return;
+            }
+    
+            const apiKey = "AIzaSyCiCGFuudIB0gQkCqpbpRPcsGQ_WWaeOes"; // ⚠️ NOT SECURE!
+            const url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+    
+            const prompt = `Create unique recipes using these ingredients: ${ingredients}. Provide the recipe name, ingredients, and step-by-step instructions.`;
+            const requestData = { contents: [{ parts: [{ text: prompt }] }] };
+    
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestData)
+                });
+    
+                const data = await response.json();
+                const recipesText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No recipes generated.";
+    
+                displayRecipes(recipesText);
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Failed to fetch recipes. Please try again.");
+            }
+        }
+    
+        function displayRecipes(recipesText) {
+            const recipesDiv = document.getElementById("recipes");
+            const recipesArray = recipesText.split("\n\n").map((recipe) => {
+                const [title, ...content] = recipe.split("\n");
+                return { title, content: content.join("\n") };
+            });
+    
+            recipesArray.forEach((recipe) => {
+                const recipeCard = document.createElement("div");
+                recipeCard.className = "recipe-card";
+    
+                const recipeTitle = document.createElement("div");
+                recipeTitle.className = "recipe-title";
+                recipeTitle.textContent = recipe.title;
+    
+                const recipeContent = document.createElement("div");
+                recipeContent.className = "recipe-content";
+    
+                // Replace **text** with bold HTML tags
+                const formattedContent = recipe.content.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+                recipeContent.innerHTML = formattedContent;
+    
+                recipeCard.appendChild(recipeTitle);
+                recipeCard.appendChild(recipeContent);
+                recipesDiv.appendChild(recipeCard);
+            });
+        }
+    </script>
+</body>
+</html>
